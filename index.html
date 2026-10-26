@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Language Translation Tool</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f2f4f8; margin: 0; padding: 16px; }
+  .card { max-width: 480px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  h1 { font-size: 22px; text-align: center; margin-top: 0; }
+  label { font-weight: bold; font-size: 14px; }
+  select, textarea, button { width: 100%; box-sizing: border-box; margin: 6px 0 14px; padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; }
+  textarea { height: 110px; resize: vertical; }
+  button { background: #2d6cdf; color: #fff; border: none; cursor: pointer; }
+  button.secondary { background: #555; }
+  #output { background: #eef3ff; min-height: 60px; padding: 10px; border-radius: 8px; white-space: pre-wrap; margin-bottom: 14px; }
+  .row { display: flex; gap: 8px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Language Translation Tool</h1>
+
+  <label for="text">Enter text</label>
+  <textarea id="text" placeholder="Type or paste text here..." maxlength="500"></textarea>
+
+  <label for="source">From</label>
+  <select id="source"></select>
+
+  <label for="target">To</label>
+  <select id="target"></select>
+
+  <button id="translateBtn">Translate</button>
+
+  <label>Translation</label>
+  <div id="output">Your translation will appear here.</div>
+
+  <div class="row">
+    <button class="secondary" id="copyBtn">Copy</button>
+    <button class="secondary" id="speakBtn">Listen</button>
+  </div>
+</div>
+
+<script>
+const languages = {
+  en: "English", fr: "French", de: "German", es: "Spanish", it: "Italian",
+  pt: "Portuguese", ar: "Arabic", hi: "Hindi", zh: "Chinese", ja: "Japanese",
+  ru: "Russian", sw: "Swahili", yo: "Yoruba", ig: "Igbo", ha: "Hausa"
+};
+
+const source = document.getElementById("source");
+const target = document.getElementById("target");
+const output = document.getElementById("output");
+
+for (const [code, name] of Object.entries(languages)) {
+  source.add(new Option(name, code));
+  target.add(new Option(name, code));
+}
+source.value = "en";
+target.value = "fr";
+
+document.getElementById("translateBtn").addEventListener("click", async () => {
+  const text = document.getElementById("text").value.trim();
+  if (!text) { output.textContent = "Please enter some text."; return; }
+  if (source.value === target.value) { output.textContent = text; return; }
+
+  output.textContent = "Translating...";
+  try {
+    const url = "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(text) + "&langpair=" + source.value + "|" + target.value;
+    const response = await fetch(url);
+    const data = await response.json();
+    output.textContent = data.responseData.translatedText;
+  } catch (error) {
+    output.textContent = "Error: could not translate. Check your internet connection.";
+  }
+});
+
+document.getElementById("copyBtn").addEventListener("click", () => {
+  navigator.clipboard.writeText(output.textContent);
+  alert("Copied!");
+});
+
+document.getElementById("speakBtn").addEventListener("click", () => {
+  const speech = new SpeechSynthesisUtterance(output.textContent);
+  speech.lang = target.value;
+  window.speechSynthesis.speak(speech);
+});
+</script>
+</body>
+</html>
